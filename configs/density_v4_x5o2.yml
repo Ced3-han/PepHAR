@@ -1,0 +1,65 @@
+model:
+  type: density_module_v4
+  num_layers: 4
+  node_feat_dim: 128
+  pair_feat_dim: 16
+  dropout_rate: 0.5
+  ga_block_opt:
+    value_dim: 32
+    query_key_dim: 32
+    num_query_points: 8
+    num_value_points: 8
+    num_heads: 12
+    bias: False
+
+data:
+  train:
+    type: protein_peptide
+    data_dir: "/datapool/data2/home/ruihan/data/jiahan/ResProj/PepDiff/pepar/data/train_data.pkl"
+    is_train: True
+    split_ratio:  1.0
+    return_name:  False
+    transform:
+      - type: truncate_protein_v3
+        rec_length: 224
+        pep_length: 32
+      - type: add_noise_new
+        x_sigma: 0.5
+        o_sigma: 0.2
+      - type: to_aa_density_v4
+      - type: sample_negative_v4
+        sigma: 10.0
+
+  val:
+    type: protein_peptide
+    data_dir: "/datapool/data2/home/ruihan/data/jiahan/ResProj/PepDiff/pepar/data/test_data.pkl"
+    is_train: False
+    split_ratio:  1.0
+    return_name:  False
+    transform:
+      - type: truncate_protein_v3
+        rec_length: 224
+        pep_length: 32
+      - type: to_aa_density_v4
+      - type: sample_negative_v4
+        sigma: 10.0
+
+train:
+  loss_weights:
+    loss_clf: 1.0
+  max_iters: 10_000_000
+  val_freq: 200
+  batch_size: 64
+  seed: 2022
+  max_grad_norm: 10.0
+  optimizer:
+    type: adam
+    lr: 3.e-4
+    weight_decay: 1.e-5
+    beta1: 0.9
+    beta2: 0.999
+  scheduler:
+    type: plateau
+    factor: 0.8
+    patience: 20
+    min_lr: 1.e-5
